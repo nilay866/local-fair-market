@@ -1,25 +1,22 @@
-pipeline {
-  agent any
+stage('Deploy Frontend') {
+    steps {
+        sh """
+        ssh -o StrictHostKeyChecking=no ubuntu@13.201.61.191 << 'EOF'
+            set -e
+            mkdir -p /home/ubuntu/app
+            cd /home/ubuntu/app
 
-  stages {
-    stage('Deploy Frontend') {
-      steps {
-        sh '''
-        ssh ubuntu@13.201.61.191 << 'EOF'
-          set -e
-          cd ~/app || mkdir -p ~/app && cd ~/app
-          if [ ! -d frontend ]; then
-            git clonehttps://github.com/nilay866/local-fair-market.git .
-          else
-            git pull
-          fi
-          cd frontend
-          docker rm -f frontend || true
-          docker build -t frontend:latest .
-          docker run -d --name frontend -p 80:80 frontend:latest
+            if [ -d "local-fair-market" ]; then
+                cd local-fair-market
+                git pull origin main
+            else
+                git clone https://github.com/nilay866/local-fair-market.git
+                cd local-fair-market
+            fi
+
+            npm install
+            npm run build
         EOF
-        '''
-      }
+        """
     }
-  }
 }
